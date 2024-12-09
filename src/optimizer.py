@@ -1,71 +1,55 @@
-import polars as pl
 import numpy as np
-import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 
-class Optimizer:
-    def __init__(self, portfolio):
-        self.portfolio = portfolio
+class PortfolioOptimizer:
+    def __init__(self, stock_data):
+        self.stock_data = stock_data
+        self.returns = self.stock_data.pct_change().dropna()
+        self.mean_returns = self.returns.mean()
+        self.cov_matrix = self.returns.cov()
+        self.num_stocks = len(self.stock_data.columns)
+        self.results = None
 
-    def optimize_portfolio(self, desired_return):
-        stock_symbols = list(self.portfolio.stocks.keys())
-        num_assets = len(stock_symbols)
+    def calculate_efficient_frontier(self, num_portfolios=10000):
+        results = np.zeros((3, num_portfolios))
+        for i in range(num_portfolios):
+            weights = np.random.random(self.num_stocks)
+            weights /= np.sum(weights)
+            portfolio_return = np.sum(weights * self.mean_returns)
+            portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(self.cov_matrix, weights)))
+            results[0,i] = portfolio_stddev
+            results[1,i] = portfolio_return
+            results[2,i] = portfolio_return / portfolio_stddev
+        self.results = results
 
-        # Fetch historical data for each stock
-        returns = []
-        for stock_symbol in stock_symbols:
-            stock = yf.Ticker(stock_symbol)
-            hist = stock.history(period="max")
-            hist['Return'] = hist['Close'].pct_change()
-            returns.append(hist['Return'][1:])
-        
-        returns_df = pl.DataFrame(returns).transpose()
-        expected_returns = returns_df.mean()
-        covariance_matrix = returns_df.cov()
+    def calculate_portfolio_risk_return(self, weights):
+        portfolio_return = np.sum(weights * self.mean_returns)
+        portfolio_stddev = np.sqrt(np.dot(weights.T, np.dot(self.cov_matrix, weights)))
+        return portfolio_stddev, portfolio_return
 
-        # Define the objective function (minimize variance)
-        def objective(weights):
-            return np.sqrt(np.dot(weights.T, np.dot(covariance_matrix, weights)))
+    def display_efficient_frontier(self):
+        if self.results is None:
+            raise ValueError("Efficient frontier not calculated. Call calculate_efficient_frontier first.")
+        plt.scatter(self.results[0,:], self.results[1,:], c=self.results[2,:], cmap='YlGnBu', marker='o')
+        plt.title('Efficient Frontier')
+        plt.xlabel('Risk')
+        plt.ylabel('Return')
+        plt.colorbar(label='Sharpe ratio')
+        plt.show()
 
-        # Constraints: Expected return should be equal to desired return
-        constraints = ({'type': 'eq', 'fun': lambda weights: np.dot(weights, expected_returns) - desired_return},
-                       {'type': 'eq', 'fun': lambda weights: np.sum(weights) - 1})
+# Example Usage
+if __name__ == "__main__":
+    # Mock data
+    dates = pd.date_range('2023-01-01', '2024-01-01')
+    stock_data = pd.DataFrame(np.random.randn(len(dates), 4), index=dates, columns=['AAPL', 'GOOGL', 'MSFT', 'AMZN'])
 
-        # Bounds: Weights should be between 0 and 1
-        bounds = tuple((0, 1) for _ in range(num_assets))
+    optimizer = PortfolioOptimizer(stock_data)
+    optimizer.calculate_efficient_frontier()
+    optimizer.display_efficient_frontier()
 
-        # Initial guess: Equal distribution
-        initial_guess = num_assets * [1. / num_assets]
-
-        # Run optimization
-        optimized_result = minimize(objective, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints)
-
-        # Calculate the amount to sell for each stock
-        optimized_weights = optimized_result.x
-        current_values = np.array([self.portfolio.stocks[symbol] * yf.Ticker(symbol).history(period='1d')['Close'].iloc[-1] for symbol in stock_symbols])
-        target_values = optimized_weights * self.portfolio.get_portfolio_value()
-
-        sell_amounts = current_values - target_values
-        return dict(zip(stock_symbols, sell_amounts))
-
-    def calculate_portfolio_risk(self):
-        stock_symbols = list(self.portfolio.stocks.keys())
-        num_assets = len(stock_symbols)
-
-        # Fetch historical data for each stock
-        returns = []
-        for stock_symbol in stock_symbols:
-            stock = yf.Ticker(stock_symbol)
-            hist = stock.history(period="max")
-            hist['Return'] = hist['Close'].pct_change()
-            returns.append(hist['Return'][1:])
-        
-        returns_df = pl.DataFrame(returns).transpose()
-        covariance_matrix = returns_df.cov()
-
-        # Calculate portfolio risk (standard deviation)
-        weights = np.array([self.portfolio.stocks[symbol] for symbol in stock_symbols])
-        weights = weights / np.sum(weights)
-        portfolio_variance = np.dot(weights.T, np.dot(covariance_matrix, weights))
-        portfolio_risk = np.sqrt(portfolio_variance)
-        return portfolio_risk
+    # Calculate risk/return for a specific portfolio
+    weights = np.array([0.25, 0.25, 0.25, 0.25])
+    risk, return_ = optimizer.calculate_portfolio_risk_return(weights)
+    print(f"Portfolio Risk: {risk}, Portfolio Return: {return_}")
