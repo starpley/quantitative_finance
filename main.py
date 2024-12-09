@@ -67,20 +67,26 @@ def main():
     performances = []
     for i, portfolio_weights in enumerate(similar_risk_portfolios):
         test_portfolio = Portfolio(iex_token, polygon_key, alpha_key)
+        shares_to_sell = {}
         for j, stock_symbol in enumerate(stock_symbols):
             shares = portfolio_weights[j] * total_shares
+            current_shares = portfolio.stocks[stock_symbol]
+            shares_to_sell[stock_symbol] = current_shares - shares
             test_portfolio.add_stock(stock_symbol, shares)
         backtester = Backtester(test_portfolio)
         backtester.backtest_portfolio()
         performance = backtester.calculate_performance()
-        performances.append((i + 1, performance))
+        performances.append((i + 1, performance, shares_to_sell))
         print(f"Portfolio {i + 1} performance: {performance:.2%}")
 
     # Rank portfolios by performance
     performances.sort(key=lambda x: x[1], reverse=True)
     print("Portfolios ranked by performance:")
-    for rank, (portfolio_id, performance) in enumerate(performances, start=1):
+    for rank, (portfolio_id, performance, shares_to_sell) in enumerate(performances, start=1):
         print(f"Rank {rank}: Portfolio {portfolio_id} with performance {performance:.2%}")
+        print("Shares to sell:")
+        for stock_symbol, shares in shares_to_sell.items():
+            print(f"  {stock_symbol}: {shares:.2f} shares")
 
 if __name__ == "__main__":
     main()
