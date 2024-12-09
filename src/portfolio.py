@@ -1,14 +1,17 @@
 import os
 import json
-from quote_providers import YahooFinanceProvider, IEXCloudProvider, PolygonProvider, AlphaVantageProvider
+from yfinance import Ticker as YahooFinanceProvider
+from iexfinance.stocks import Stock as IEXCloudProvider
+from polygon import BaseClient as PolygonProvider
+from alpha_vantage.timeseries import TimeSeries as AlphaVantageProvider
 
 class Portfolio:
     def __init__(self, iex_token, polygon_key, alpha_key):
         self.stocks = {}
-        self.yahoo_provider = YahooFinanceProvider()
+        self.yahoo_provider = YahooFinanceProvider
         self.iex_provider = IEXCloudProvider(iex_token)
         self.polygon_provider = PolygonProvider(polygon_key)
-        self.alpha_provider = AlphaVantageProvider(alpha_key)
+        self.alpha_provider = AlphaVantageProvider(key=alpha_key)
         self.data_dir = "data"
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
@@ -23,10 +26,10 @@ class Portfolio:
     def fetch_data(self, stock_symbol):
         data = []
         sources = [
-            ("YahooFinance", self.yahoo_provider.get_quote),
-            ("IEXCloud", self.iex_provider.get_quote),
-            ("Polygon.io", self.polygon_provider.get_quote),
-            ("AlphaVantage", self.alpha_provider.get_quote)
+            ("YahooFinance", lambda symbol: self.yahoo_provider(symbol).info['regularMarketPrice']),
+            ("IEXCloud", lambda symbol: self.iex_provider(symbol).get_price()),
+            ("Polygon.io", lambda symbol: self.polygon_provider.reference_ticker_details(symbol).ticker),
+            ("AlphaVantage", lambda symbol: self.alpha_provider.get_intraday(symbol=symbol, interval='1min')[0])
         ]
         
         for source_name, fetch_function in sources:

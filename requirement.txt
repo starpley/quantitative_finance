@@ -1,4 +1,8 @@
+alpha_vantage
+iexfinance
 numpy
+pandas
 polars
+polygon
 scipy
 yfinance

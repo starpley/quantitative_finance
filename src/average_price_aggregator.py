@@ -2,7 +2,6 @@ import os
 import json
 from datetime import datetime
 from collections import defaultdict
-from quote_providers import YahooFinanceProvider, IEXCloudProvider, PolygonProvider, AlphaVantageProvider
 
 class AveragePriceAggregator:
     def __init__(self, iex_token, polygon_key, alpha_key):
