@@ -5,6 +5,7 @@ from src.stock_data_loader import StockDataLoader
 from src.portfolio import Portfolio
 from src.average_price_aggregator import AveragePriceAggregator
 from src.optimizer import Optimizer, PortfolioOptimizer
+from src.backtester import Backtester
 
 def main():
     # Initialize the StockDataLoader and load stock positions from the CSV file
@@ -61,6 +62,25 @@ def main():
     print("Generated portfolios with similar risks:")
     for i, portfolio in enumerate(similar_risk_portfolios):
         print(f"Portfolio {i + 1}: {portfolio}")
+
+    # Backtest each portfolio and rank by performance
+    performances = []
+    for i, portfolio_weights in enumerate(similar_risk_portfolios):
+        test_portfolio = Portfolio(iex_token, polygon_key, alpha_key)
+        for j, stock_symbol in enumerate(stock_symbols):
+            shares = portfolio_weights[j] * total_shares
+            test_portfolio.add_stock(stock_symbol, shares)
+        backtester = Backtester(test_portfolio)
+        backtester.backtest_portfolio()
+        performance = backtester.calculate_performance()
+        performances.append((i + 1, performance))
+        print(f"Portfolio {i + 1} performance: {performance:.2%}")
+
+    # Rank portfolios by performance
+    performances.sort(key=lambda x: x[1], reverse=True)
+    print("Portfolios ranked by performance:")
+    for rank, (portfolio_id, performance) in enumerate(performances, start=1):
+        print(f"Rank {rank}: Portfolio {portfolio_id} with performance {performance:.2%}")
 
 if __name__ == "__main__":
     main()
