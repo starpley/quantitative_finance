@@ -39,6 +39,16 @@ class PortfolioOptimizer:
         plt.colorbar(label='Sharpe ratio')
         plt.show()
 
+    def generate_similar_risk_portfolios(self, target_risk, num_portfolios=10):
+        portfolios = []
+        for i in range(num_portfolios):
+            weights = np.random.random(self.num_stocks)
+            weights /= np.sum(weights)
+            result = minimize(self.calculate_portfolio_risk_return, weights, args=(target_risk,), method='SLSQP', bounds=[(0, 1)]*self.num_stocks, constraints={'type': 'eq', 'fun': lambda weights: np.sum(weights) - 1})
+            if result.success:
+                portfolios.append(result.x)
+        return portfolios
+
 # Example Usage
 if __name__ == "__main__":
     # Mock data
@@ -53,3 +63,10 @@ if __name__ == "__main__":
     weights = np.array([0.25, 0.25, 0.25, 0.25])
     risk, return_ = optimizer.calculate_portfolio_risk_return(weights)
     print(f"Portfolio Risk: {risk}, Portfolio Return: {return_}")
+
+    # Generate portfolios with similar risks
+    target_risk = risk
+    similar_risk_portfolios = optimizer.generate_similar_risk_portfolios(target_risk, num_portfolios=10)
+    print("Generated portfolios with similar risks:")
+    for i, portfolio in enumerate(similar_risk_portfolios):
+        print(f"Portfolio {i + 1}: {portfolio}")

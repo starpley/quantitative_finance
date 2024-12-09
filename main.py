@@ -4,7 +4,7 @@ import pandas as pd
 from src.stock_data_loader import StockDataLoader
 from src.portfolio import Portfolio
 from src.average_price_aggregator import AveragePriceAggregator
-from src.optimize import PortfolioOptimizer
+from src.optimizer import Optimizer, PortfolioOptimizer
 
 def main():
     # Initialize the StockDataLoader and load stock positions from the CSV file
@@ -55,6 +55,12 @@ def main():
     actual_weights = [weight / total_shares for weight in actual_weights]
     risk, return_ = optimizer.calculate_portfolio_risk_return(actual_weights)
     print(f"Actual portfolio risk: {risk}, return: {return_}")
+
+    # Generate portfolios with similar risks
+    similar_risk_portfolios = optimizer.generate_similar_risk_portfolios(risk, num_portfolios=10)
+    print("Generated portfolios with similar risks:")
+    for i, portfolio in enumerate(similar_risk_portfolios):
+        print(f"Portfolio {i + 1}: {portfolio}")
 
 if __name__ == "__main__":
     main()
