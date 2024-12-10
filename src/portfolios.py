@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 from src.portfolio import Portfolio
 
 class Portfolios:
-    def __init__(self, asset_data, portfolio_count):
+    def __init__(self, asset_data):
         self.asset_data = asset_data
-        self.portfolios = [Portfolio(asset_data) for _ in range(portfolio_count)]
+        self.portfolios = None
         self.current_portfolio = None
         self.best_portfolios_by_return = []
 
     def create_random_portfolios(self, num_portfolios):
+        self.portfolios = [Portfolio(self.asset_data) for _ in range(num_portfolios)]
         for portfolio in self.portfolios:
             portfolio.create_random_portfolio()
 

@@ -1,9 +1,11 @@
 alpha_vantage
 iexfinance
+loguru
 matplotlib
 numpy
 pandas
 polars
 polygon
+pyarrow
 scipy
 yfinance
