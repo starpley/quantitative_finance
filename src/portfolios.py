@@ -7,25 +7,21 @@ from iexfinance.stocks import Stock as IEXCloudProvider
 from polygon import BaseClient as PolygonProvider
 from alpha_vantage.timeseries import TimeSeries as AlphaVantageProvider
 
-from src.asset_data import AssetData
+from src.portfolio import Portfolio
 
 class Portfolio:
     
-    asset_data = None
+    current_portfolio = Portfolio()
     
-    def __init__(self):
+    def __init__(self, porfolio_count):
         pass
     
-    def create_portfolio(self, stock_positions):
+    def create_random_portfolios(self, num_portfolios):
         pass
     
-    def create_random_portfolio(self):
-        pass
+    def get_best_portfolios(self, target_risk, target_return, num_portfolios):
+        pass    
     
-    def calculate_portfolio_risk_return(self):
-        pass
     
-    def calculate_portfolio_sharpe_ratio(self):
-        pass
     
     

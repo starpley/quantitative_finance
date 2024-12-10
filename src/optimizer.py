@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 
-class PortfolioOptimizer:
+class Optimizer:
     def __init__(self, stock_data):
         self.stock_data = stock_data
         self.returns = self.stock_data.pct_change().dropna()

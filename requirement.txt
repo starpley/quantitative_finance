@@ -1,5 +1,6 @@
 alpha_vantage
 iexfinance
+matplotlib
 numpy
 pandas
 polars
